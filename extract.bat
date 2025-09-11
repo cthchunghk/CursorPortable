@@ -1,6 +1,7 @@
 @echo off
 if [%1]==[] goto usage
-%1 /VERYSILENT /SUPPRESSMSGBOXES /DIR="%~dp0App\cursor" /TASKS=""  
+.\App\utils\innounp\innounp.exe -q -x -dApp %1 {code_GetDestDir}\*
+RENAME ".\App\{code_GetDestDir}" "cursor"
 goto end
 
 
@@ -10,4 +11,4 @@ echo %~nx0 [Cursor_UserSetup_path]
 goto end
 
 :end
-pause
+rem pause
