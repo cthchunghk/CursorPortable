@@ -1,7 +1,9 @@
 @echo off
 if [%1]==[] goto usage
 .\App\utils\innounp\innounp.exe -q -x -dApp %1 {code_GetDestDir}\*
-RENAME ".\App\{code_GetDestDir}" "cursor"
+rem move /y ".\App\{code_GetDestDir}" ".\App\cursor"
+xcopy /S /Y ".\App\{code_GetDestDir}" ".\App\cursor"
+rd /S /Q ".\App\{code_GetDestDir}"
 goto end
 
 
