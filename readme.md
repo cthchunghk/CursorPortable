@@ -5,8 +5,13 @@ Just for self use, Maybe there are many bugs.
 ### 1. Usage
 1. Download this structure
 2. Download the latest [Cursor build](https://cursor.com/downloads). I only tested User Setup.
-3. Use extract.bat to extract the main files to App\cursor
-4. Run CursorPortable.exe. Enjoy!
+3. Use `extract.bat` to extract the main files to App\cursor
+4. Run `CursorPortable.exe`. Enjoy!
+
+OR
+
+2. Run `updater.bat` to download and extract the latest build!
+4. Run `CursorPortable.exe`. Enjoy!
 
 ---
 ### 2. Detail
@@ -28,4 +33,5 @@ I am not sure if the _%LOCALAPPDATA%\Programs\cursor_ is still using as my insta
 
 ---
 ### 4. Credit
-Inno Unpack: https://www.rathlev-home.de/index-e.html?tools/prog-e.html#unpack
+Inno Unpack: https://www.rathlev-home.de/index-e.html?tools/prog-e.html#unpack      
+OSLook Cursor official download list: https://github.com/oslook/cursor-ai-downloads/

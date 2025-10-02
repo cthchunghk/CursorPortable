@@ -1,7 +1,7 @@
 @echo off
 if [%1]==[] goto usage
 echo Extracting files from installer...
-.\App\utils\innounp\innounp.exe -q -x -dtemp %1 {code_GetDestDir}\* >nul 2>&1
+.\App\utils\innounp\innounp.exe -q -x -dtmp %1 {code_GetDestDir}\* >nul 2>&1
 rem move /y ".\App\{code_GetDestDir}" ".\App\cursor"
 xcopy /S /Y /I ".\temp\{code_GetDestDir}" ".\App\cursor" >nul 2>&1
 echo Cleanup...
