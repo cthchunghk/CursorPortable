@@ -16,7 +16,7 @@ echo.
 :: ==============================================
 :: Use PowerShell to get latest files list, download and extract
 :: ==============================================
-powershell .\App\utils\updater.ps1 %TARGET_DIR% %RAW_CONTENT_URL%
+powershell .\App\utils\scripts\updater.ps1 %TARGET_DIR% %RAW_CONTENT_URL%
 
 if ERRORLEVEL 1 ( 
     echo.

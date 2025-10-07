@@ -4,7 +4,7 @@
 $TARGET_DIR=$args[0]
 $RAW_CONTENT_URL=$args[1]
 $SAVE_PATH=Join-Path $TARGET_DIR "tmp"
-$CURSOR_EXE_NAME="Cursor.exe"
+$CURSOR_EXE_NAME="Cursor"
 $DestDirCode = "{code_GetDestDir}" 
 $AppCursorDir = Join-Path $TARGET_DIR "App\cursor"
 $UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop';
 # Check the readme file for the latest version
 # =============
 
-Write-Host "1. Getting latest 'user-setup' link in the provided URL..."
+Write-Host "Getting latest 'user-setup' link in the provided URL..."
 
 $raw = Invoke-WebRequest -Uri $RAW_CONTENT_URL -UseBasicParsing -UserAgent $UA;
 
@@ -38,8 +38,8 @@ $pureUrl = $urlMatch;
 $filename = Split-Path $pureUrl -Leaf; 
 $saveFile = Join-Path $SAVE_PATH $filename;
 
-Write-Host ('Found the latest URL: ' + $pureUrl);
-Write-Host ('Latest Filename: ' + $filename); 
+#Write-Host ('Found the latest URL: ' + $pureUrl);
+#Write-Host ('Latest Filename: ' + $filename); 
 
 
 # ====================
@@ -56,11 +56,11 @@ $Match = [regex]::Match($filename, '(?<Version>\d+\.\d+\.\d+)')
 $FileVersion = $Match.Groups['Version'].Value
 
 
-Write-Host "Your Version: $ExeVersionTrimmed"
+#Write-Host "Your Version: $ExeVersionTrimmed"
 Write-Host "Latest version: $FileVersion"
 
 If ($ExeVersionTrimmed -eq $FileVersion) {
-    Write-Host "You have installed the latest version ($FileVersion)" -ForegroundColor Green
+    Write-Host "You have installed the latest version ($ExeVersionTrimmed)" -ForegroundColor Green
     exit 0
 }
 
@@ -73,7 +73,28 @@ Write-Host "Latest version found. Process update." -ForegroundColor Yellow
 New-Item -Path $SAVE_PATH -ItemType Directory -Force *>$null
 
 Write-Host '2. Downloading the latest resources...'; 
-Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA; 
+#Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA; 
+
+
+
+try {
+	Start-BitsTransfer -Source $pureUrl -Destination $saveFile -TransferType Download -DisplayName 'Cursor Installer Download' -ErrorAction Stop;
+} catch {
+	Write-Host "Fallbacking to Invoke-WebRequest to download...";
+	Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA;
+}
+
+# ===============
+# Process checking
+# ===============
+$process = Get-Process -Name $CURSOR_EXE_NAME -ErrorAction SilentlyContinue;
+if ($process){
+	Write-Host "Please close all Cursor window to process update..." -ForegroundColor Red
+	Write-Host "Cleaning up..."
+	Remove-Item -Path $SAVE_PATH -Recurse -Force 1>$null
+	exit 1;
+	#taskkill /im $CURSOR_EXE_NAME /f /t 2>&1 | Out-Null;
+} 
 
 
 Write-Host "Extraction in progress..." -ForegroundColor Cyan
