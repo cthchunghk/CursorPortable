@@ -13,6 +13,7 @@ $pattern = 'win32-arm64-system</a><br><a href=\"(https://.*?win32/x64/user-setup
 
 
 $ErrorActionPreference = 'Stop';
+$ProgressPreference = 'SilentlyContinue'
 
 # =============
 # Check the readme file for the latest version
@@ -78,7 +79,7 @@ Write-Host '2. Downloading the latest resources...';
 
 
 try {
-	Start-BitsTransfer -Source $pureUrl -Destination $saveFile -TransferType Download -DisplayName 'Cursor Installer Download' -ErrorAction Stop;
+	Start-BitsTransfer -Source $pureUrl -Destination $saveFile -TransferType Download -DisplayName 'Cursor Installer Download';
 } catch {
 	Write-Host "Fallbacking to Invoke-WebRequest to download...";
 	Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA;
