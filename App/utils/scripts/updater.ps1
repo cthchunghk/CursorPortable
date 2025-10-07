@@ -65,15 +65,16 @@ If ($ExeVersionTrimmed -eq $FileVersion) {
     exit 0
 }
 
-Write-Host "Latest version found. Process update." -ForegroundColor Yellow
+Write-Host "Latest version ($FileVersion) found. Process update." -ForegroundColor Yellow
 
 # =================
 # Start download latest version and extract it
 # =================
 
 New-Item -Path $SAVE_PATH -ItemType Directory -Force *>$null
+$ProgressPreference = 'Continue' # Reset to default after execution
 
-Write-Host '2. Downloading the latest resources...'; 
+Write-Host 'Downloading the latest resources...'; 
 #Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA; 
 
 
@@ -105,7 +106,7 @@ Write-Host "Extraction in progress..." -ForegroundColor Cyan
 
 # 2. XCOPY to copy the files
 Write-Host "Moving the extracted files..."
-$SourcePath = Join-Path -Path $SAVE_PATH -ChildPath "$DestDirCode\*"
+$SourcePath = Join-Path -Path $SAVE_PATH -ChildPath "$DestDirCode\"
 Copy-Item -Path $SourcePath -Destination $AppCursorDir -Recurse -Force 1>$null
 
 # 3. Cleanup
