@@ -10,7 +10,7 @@ Just for self use, Maybe there are many bugs.
 
 OR
 
-2. Run `updater.bat` to download and extract the latest build!
+2. Run `updater.bat` to download and extract the [latest build](https://github.com/oslook/cursor-ai-downloads/)!
 4. Run `CursorPortable.exe`. Enjoy!
 
 ---
