@@ -1,11 +1,16 @@
 @echo off
+title Setup extractor
 if [%1]==[] goto usage
+set destDirCode={code_GetDestDir}
+set cursorDir=%~dp0App\cursor
+set tmpDir=%~dp0tmp
 echo Extracting files from installer...
-.\App\utils\innounp\innounp.exe -q -x -dtmp %1 {code_GetDestDir}\* >nul 2>&1
+.\App\utils\innounp\innounp.exe -q -x -d%tmpDir% %1 %destDirCode%\* >nul 2>&1
 rem move /y ".\App\{code_GetDestDir}" ".\App\cursor"
-xcopy /S /Y /I ".\temp\{code_GetDestDir}" ".\App\cursor" >nul 2>&1
+xcopy /S /Y /I %tmpDir%\%destDirCode%\ %cursorDir% >nul 2>&1
 echo Cleanup...
-rd /S /Q ".\temp"
+rd /S /Q %tmpDir%
+echo Files extracted
 goto end
 
 
@@ -15,4 +20,4 @@ echo %~nx0 [Cursor_UserSetup_path]
 goto end
 
 :end
-rem pause
+pause

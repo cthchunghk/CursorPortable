@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 > nul 
+title Cursor Updater
 setlocal
 
 set TARGET_DIR=%~dp0

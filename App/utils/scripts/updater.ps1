@@ -6,7 +6,7 @@ $RAW_CONTENT_URL=$args[1]
 $SAVE_PATH=Join-Path $TARGET_DIR "tmp"
 $CURSOR_EXE_NAME="Cursor"
 $DestDirCode = "{code_GetDestDir}" 
-$AppCursorDir = Join-Path $TARGET_DIR "App\cursor"
+$AppCursorDir = Join-Path $TARGET_DIR "App\cursor\"
 $UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 $pattern = 'win32-arm64-system</a><br><a href=\"(https://.*?win32/x64/user-setup/CursorUserSetup-x64-.*?.exe)\"';
@@ -48,7 +48,7 @@ $saveFile = Join-Path $SAVE_PATH $filename;
 # ====================
 
 $EscapedPath = $TARGET_DIR.Replace('\', '\\')
-$ExeVersionRaw = (wmic datafile where "name='$EscapedPath\\App\\cursor\\cursor.exe'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() }
+$ExeVersionRaw = (wmic datafile where "name='$EscapedPath\\App\\cursor\\cursor.exe'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() } 
 
 $ExeVersionTrimmed = ($ExeVersionRaw -split '\.')[0..2] -join '.'
 
@@ -56,8 +56,9 @@ $ExeVersionTrimmed = ($ExeVersionRaw -split '\.')[0..2] -join '.'
 $Match = [regex]::Match($filename, '(?<Version>\d+\.\d+\.\d+)')
 $FileVersion = $Match.Groups['Version'].Value
 
-
-#Write-Host "Your Version: $ExeVersionTrimmed"
+if ($ExeVersionTrimmed){
+	Write-Host "Your Version: $ExeVersionTrimmed"
+}
 Write-Host "Latest version: $FileVersion"
 
 If ($ExeVersionTrimmed -eq $FileVersion) {
@@ -107,7 +108,22 @@ Write-Host "Extraction in progress..." -ForegroundColor Cyan
 # 2. XCOPY to copy the files
 Write-Host "Moving the extracted files..."
 $SourcePath = Join-Path -Path $SAVE_PATH -ChildPath "$DestDirCode\"
-Copy-Item -Path $SourcePath -Destination $AppCursorDir -Recurse -Force 1>$null
+$RobocopyParameters = @(
+    "/E", "/IS", "/IT", 
+    "/R:3", "/W:1",
+    "/NFL", "/NDL", "/NJH", "/NJS" 
+)
+
+$RobocopyResult = & robocopy $SourcePath $AppCursorDir $RobocopyParameters
+
+$ExitCode = $LASTEXITCODE
+
+if ($ExitCode -le 7) {
+    Write-Host "✅ Robocopy operation completed (Exit Code: $ExitCode)。"
+} else {
+    Write-Warning "❌ Robocopy failed (Exit Code: $ExitCode). Please check the path or permissions."
+}
+
 
 # 3. Cleanup
 Write-Host "Cleaning up..."
