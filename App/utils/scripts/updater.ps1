@@ -61,14 +61,13 @@ $saveFile = Join-Path $SAVE_PATH $filename;
 # ====================
 
 $EscapedPath = $TARGET_DIR.Replace('\', '\\')
-$ExeVersionRaw = (wmic datafile where "name='$EscapedPath\\App\\cursor\\cursor.exe'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() }
-
-$ExeVersionTrimmed = ($ExeVersionRaw -split '\.')[0..2] -join '.'
-
-if (-not $ExeVersionTrimmed){
-    $ExeVersionTrimmed = 0
+$CursorExePath = "$EscapedPath\\App\\cursor\\cursor.exe"
+if (Test-Path -Path $CursorExePath -PathType Leaf) {
+    $ExeVersionRaw = (wmic datafile where "name='$CursorExePath'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() } 
+    $ExeVersionTrimmed = ($ExeVersionRaw -split '\.')[0..2] -join '.';
+} else {
+    $ExeVersionTrimmed = 0.0.0
 }
-
 
 $Match = [regex]::Match($filename, '(?<Version>\d+\.\d+\.\d+)')
 $FileVersion = $Match.Groups['Version'].Value
@@ -84,11 +83,16 @@ if ($specifyingVersion -eq 'true'){
 }
 
 If ($ExeVersionTrimmed -eq $FileVersion) {
-    Write-Host "You have installed the latest version ($ExeVersionTrimmed)" -ForegroundColor Green
-    exit 0
+    if ($specifyingVersion -eq 'true'){
+        Write-Host "You have installed the specified version ($versionArg)" -ForegroundColor Green
+        exit 0
+    } else {
+        Write-Host "You have installed the latest version ($ExeVersionTrimmed)" -ForegroundColor Green
+        exit 0
+    }
 }
 
-if ($specifyingVersion -eq 'true' -and $ExeVersionTrimmed -ge $versionArg){
+if ($specifyingVersion -eq 'true' -and $ExeVersionTrimmed -gt $versionArg){
     Write-Host "Your installed verion ($ExeVersionTrimmed) is newer than specified version ($versionArg). Please remove the existing one if you want to downgrade." -ForegroundColor Yellow
     Write-Host "DO NOT REMOVE /Data FOLDER TO PRESERVE THE SETTING!" -ForegroundColor Red
     exit 0
