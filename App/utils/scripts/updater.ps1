@@ -9,11 +9,24 @@ $DestDirCode = "{code_GetDestDir}"
 $AppCursorDir = Join-Path $TARGET_DIR "App\cursor\"
 $UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-$pattern = 'win32-arm64-system</a><br><a href=\"(https://.*?win32/x64/user-setup/CursorUserSetup-x64-.*?.exe)\"';
+#$pattern = 'win32-arm64-system</a><br><a href=\"(https://.*?win32/x64/user-setup/CursorUserSetup-x64-.*?.exe)\"';
 
 
 $ErrorActionPreference = 'Stop';
 $ProgressPreference = 'SilentlyContinue'
+
+# =============
+# Check if the version is provided
+# =============
+$versionArg = $args[2]
+if ([string]::IsNullOrWhiteSpace($versionArg)) {
+    $versionPattern = '.*?'; 
+    $specifyingVersion = 'false';
+} else {
+    $versionPattern = [regex]::Escape($versionArg);
+    $specifyingVersion = 'true';
+}
+$pattern = 'win32-arm64-system</a><br><a href=\"(https://.*?win32/x64/user-setup/CursorUserSetup-x64-' + $versionPattern + '.exe)\"';
 
 # =============
 # Check the readme file for the latest version
@@ -48,25 +61,58 @@ $saveFile = Join-Path $SAVE_PATH $filename;
 # ====================
 
 $EscapedPath = $TARGET_DIR.Replace('\', '\\')
-$ExeVersionRaw = (wmic datafile where "name='$EscapedPath\\App\\cursor\\cursor.exe'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() } 
+$ExeVersionRaw = (wmic datafile where "name='$EscapedPath\\App\\cursor\\cursor.exe'" get Version /value) | Select-String -Pattern "Version=" | ForEach-Object { $_ -replace "Version=","" } | Select-Object -Last 1 | ForEach-Object { $_.Trim() }
 
 $ExeVersionTrimmed = ($ExeVersionRaw -split '\.')[0..2] -join '.'
+
+if (-not $ExeVersionTrimmed){
+    $ExeVersionTrimmed = 0
+}
 
 
 $Match = [regex]::Match($filename, '(?<Version>\d+\.\d+\.\d+)')
 $FileVersion = $Match.Groups['Version'].Value
 
-if ($ExeVersionTrimmed){
+if ($ExeVersionTrimmed -gt 0){
 	Write-Host "Your Version: $ExeVersionTrimmed"
 }
-Write-Host "Latest version: $FileVersion"
+
+if ($specifyingVersion -eq 'true'){
+    Write-Host "Specifying version: $versionArg"    
+} else {
+    Write-Host "Latest version: $FileVersion"
+}
 
 If ($ExeVersionTrimmed -eq $FileVersion) {
     Write-Host "You have installed the latest version ($ExeVersionTrimmed)" -ForegroundColor Green
     exit 0
 }
 
-Write-Host "Latest version ($FileVersion) found. Process update." -ForegroundColor Yellow
+if ($specifyingVersion -eq 'true' -and $ExeVersionTrimmed -ge $versionArg){
+    Write-Host "Your installed verion ($ExeVersionTrimmed) is newer than specified version ($versionArg). Please remove the existing one if you want to downgrade." -ForegroundColor Yellow
+    Write-Host "DO NOT REMOVE /Data FOLDER TO PRESERVE THE SETTING!" -ForegroundColor Red
+    exit 0
+}
+
+if ($specifyingVersion -eq 'true'){
+    Write-Host "Specified version ($versionArg) found. Start process." -ForegroundColor Yellow
+} else {
+    Write-Host "Latest version ($FileVersion) found. Process update." -ForegroundColor Yellow
+}
+
+# =================
+# Capture meta data for the size!
+# =================
+$contentLengthBytes = 0;
+    try {        
+        $headResponse = Invoke-WebRequest -Uri $pureUrl -Method Head -UseBasicParsing -UserAgent '%UA%';
+        $contentLengthBytes = [int64]($headResponse.Headers.'Content-Length');        
+        $contentLengthMB = [math]::Round($contentLengthBytes / 1MB, 2);
+        Write-Host ('Expected file size: ' + $contentLengthMB + ' MB');
+    } catch {
+        Write-Host 'Cannot capture the file size.';
+    }
+
 
 # =================
 # Start download latest version and extract it
@@ -78,11 +124,10 @@ $ProgressPreference = 'Continue' # Reset to default after execution
 Write-Host 'Downloading the latest resources...'; 
 #Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA; 
 
-
-
 try {
 	Start-BitsTransfer -Source $pureUrl -Destination $saveFile -TransferType Download -DisplayName 'Cursor Installer Download';
 } catch {
+    Write-Host $_.Exception.Message;
 	Write-Host "Fallbacking to Invoke-WebRequest to download...";
 	Invoke-WebRequest -Uri $pureUrl -OutFile $saveFile -UserAgent $UA;
 }
